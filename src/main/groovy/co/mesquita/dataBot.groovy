@@ -1,23 +1,34 @@
 package co.mesquita
 
+import org.jsoup.Jsoup
+import org.jsoup.nodes.*
+import org.jsoup.select.Elements
+
 import static groovyx.net.http.HttpBuilder.*
-import org.jsoup.nodes.Document
 
 class dataBot {
-
-
     static void main(String[] args) {
 
         def http = configure {
             request.uri = 'https://www.gov.br'
         }
 
-        def epss = http.get(){
+        String epss = http.get(){
             request.uri.path = '/ans/pt-br'
         }
 
-        def links = epss.'**'.findAll { it.name() == 'a' }*.@href*.text()
+        Document doc = Jsoup.parse(epss)
+        Elements links = doc.select('a[href]')
 
-        println links
+        def pattern = ~/Espa.o do Prestador de Servi.os de Sa.de/
+        def prestadoresURL
+        for (Element link : links) {
+            if (link.text() =~ pattern) {
+                prestadoresURL = link.attr("href")
+                break
+            }
+        }
+
+        println(prestadoresURL)
     }
 }
