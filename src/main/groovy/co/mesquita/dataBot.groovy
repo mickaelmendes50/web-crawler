@@ -11,11 +11,12 @@ import static groovyx.net.http.HttpBuilder.*
 class dataBot {
 
     // Obtem o html da pagina em formato de string
-    static String getUriPath(HttpBuilder http, String URL) {
+    static Document getUriPath(HttpBuilder http, String URL) {
         String htmlContent = http.get(){
             request.uri.path = URL
         }
-        return htmlContent
+        Document doc = Jsoup.parse(htmlContent)
+        return doc
     }
 
     static void main(String[] args) {
@@ -26,11 +27,8 @@ class dataBot {
         }
 
         final String ANS_URL = '/ans/pt-br'
-        String ans = getUriPath(http, ANS_URL)
-
-        // transforma a string em document
-        Document doc = Jsoup.parse(ans)
-        Elements links = doc.select('a[href]')
+        Document ans = getUriPath(http, ANS_URL)
+        Elements links = ans.select('a[href]')
 
         // Verifica a ocorrencia do menu desejado e entao
         // captura a URL vinculada a tag
@@ -46,10 +44,8 @@ class dataBot {
         // Utitliza a URL encontrada para reproduzir as etapas
         // anteriores e atingir o objetivo
         prestadoresURL = prestadoresURL.split('gov.br')
-        String epss = getUriPath(http, prestadoresURL[1])
-
-        doc = Jsoup.parse(epss)
-        links = doc.select('a[href]')
+        Document epss = getUriPath(http, prestadoresURL[1])
+        links = epss.select('a[href]')
 
         pattern = ~/TISS.*/
         def tissURL = ""
@@ -62,10 +58,8 @@ class dataBot {
 
         // Repetimos o processo para a pagina TISS
         tissURL = tissURL.split('gov.br')
-        String tiss = getUriPath(http, tissURL[1])
-
-        doc = Jsoup.parse(tiss)
-        links = doc.select('a[href]')
+        Document tiss = getUriPath(http, tissURL[1])
+        links = tiss.select('a[href]')
 
         pattern = ~/Clique aqui para acessar a vers.o.*/
         def mesTISS_URL = ""
@@ -77,10 +71,8 @@ class dataBot {
         }
 
         mesTISS_URL = mesTISS_URL.split('gov.br')
-        String mtiss = getUriPath(http, mesTISS_URL[1])
-
-        doc = Jsoup.parse(mtiss)
-        links = doc.select('a[href]')
+        Document mtiss = getUriPath(http, mesTISS_URL[1])
+        links = mtiss.select('a[href]')
 
         pattern = ~/Componente de Comunica..o/
         def compC_URL = ""
@@ -97,8 +89,7 @@ class dataBot {
             Download.toFile(delegate, new File('downloads/PadroTISSComunicacao.zip'))
         }
 
-        doc = Jsoup.parse(tiss)
-        links = doc.select('a[href]')
+        links = tiss.select('a[href]')
 
         pattern = ~/Clique aqui para acessar todas as versões dos Componentes/
         def historicoTISS_URL = ""
@@ -110,10 +101,9 @@ class dataBot {
         }
 
         historicoTISS_URL = historicoTISS_URL.split('gov.br')
-        String htiss = getUriPath(http, historicoTISS_URL[1])
+        Document htiss = getUriPath(http, historicoTISS_URL[1])
 
-        doc = Jsoup.parse(htiss)
-        Element table = doc.select("table").get(0)
+        Element table = htiss.select("table").get(0)
         Elements rows = table.select("tr")
 
         for (Element row : rows) {
@@ -121,8 +111,7 @@ class dataBot {
             println row.text()
         }
 
-        doc = Jsoup.parse(tiss)
-        links = doc.select('a[href]')
+        links = tiss.select('a[href]')
 
         pattern = ~/Clique aqui para acessar as planilhas/
         def tabelasTISS_URL = ""
@@ -134,10 +123,9 @@ class dataBot {
         }
 
         tabelasTISS_URL = tabelasTISS_URL.split('gov.br')
-        String tatiss = getUriPath(http, tabelasTISS_URL[1])
+        Document tatiss = getUriPath(http, tabelasTISS_URL[1])
 
-        doc = Jsoup.parse(tatiss)
-        links = doc.select('a[href]')
+        links = tatiss.select('a[href]')
 
         pattern = ~/Clique aqui para baixar a tabela de erros no envio para a ANS.*/
         def tableE_URL = ""
