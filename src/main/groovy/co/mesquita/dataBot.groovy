@@ -88,9 +88,21 @@ class dataBot {
         Element table = historicoTiss.select("table").get(0)
         Elements rows = table.select("tr")
 
-        for (Element row : rows) {
+        Element row = rows[0]
+        Elements indice = row.select("th")
+        println indice[0].text() + " " + indice[1].text() + " " + indice[2].text()
+
+        for (int i = 1; i < rows.size()-1; i++) {
+            row = rows[i]
             if (row.text().find('jan/2016')) break
-            println row.text()
+
+            Elements cols = row.select("td")
+            for (int j = 0; j < 3; j++) {
+                Element col = cols[j]
+                if (col != null)
+                    print col.text() + " "
+            }
+            println ""
         }
 
         // Obtem a URL para download do arquivo "Tabela de erros no envio para a ANS"
