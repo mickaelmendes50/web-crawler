@@ -99,6 +99,33 @@ class dataBot {
         doc = Jsoup.parse(tiss)
         links = doc.select('a[href]')
 
+        pattern = ~/Clique aqui para acessar todas as versões dos Componentes/
+        def historicoTISS_URL = ""
+        for (Element link : links) {
+            if (link.text() =~ pattern) {
+                historicoTISS_URL = link.attr("href")
+                break
+            }
+        }
+
+        historicoTISS_URL = historicoTISS_URL.split('gov.br')
+
+        String htiss = http.get(){
+            request.uri.path = historicoTISS_URL[1]
+        }
+
+        doc = Jsoup.parse(htiss)
+        Element table = doc.select("table").get(0)
+        Elements rows = table.select("tr")
+
+        for (Element row : rows) {
+            if (row.text().find('jan/2016')) break
+            println row.text()
+        }
+
+        doc = Jsoup.parse(tiss)
+        links = doc.select('a[href]')
+
         pattern = ~/Clique aqui para acessar as planilhas/
         def tabelasTISS_URL = ""
         for (Element link : links) {
@@ -109,7 +136,6 @@ class dataBot {
         }
 
         tabelasTISS_URL = tabelasTISS_URL.split('gov.br')
-        println(tabelasTISS_URL)
 
         String tatiss = http.get(){
             request.uri.path = tabelasTISS_URL[1]
