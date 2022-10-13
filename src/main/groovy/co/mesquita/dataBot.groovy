@@ -6,6 +6,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.*
 import org.jsoup.select.Elements
 
+import java.util.regex.Pattern
+
 import static groovyx.net.http.HttpBuilder.*
 
 class dataBot {
@@ -19,6 +21,21 @@ class dataBot {
         return doc
     }
 
+    // Obtem o link contido no href da tag desejada
+    static String getHrefContent(Document doc, Pattern pattern) {
+        Elements links = doc.select('a[href]')
+        def URL = ""
+        for (Element link : links) {
+            if (link.text() =~ pattern) {
+                URL = link.attr("href")
+                break
+            }
+        }
+
+        URL = URL.split('gov.br')
+        return URL[1]
+    }
+
     static void main(String[] args) {
 
         // Define a URL base
@@ -28,51 +45,33 @@ class dataBot {
 
         final String ANS_URL = '/ans/pt-br'
         Document ans = getUriPath(http, ANS_URL)
-        Elements links = ans.select('a[href]')
 
-        // Verifica a ocorrencia do menu desejado e entao
-        // captura a URL vinculada a tag
+        // Obtem a URL da pagina "Espaço do Prestador de Serviços de Saúde"
         def pattern = ~/Espa.o do Prestador de Servi.os de Sa.de/
-        def prestadoresURL = ""
-        for (Element link : links) {
-            if (link.text() =~ pattern) {
-                prestadoresURL = link.attr("href")
-                break
-            }
-        }
+        final String EPSS_URL = getHrefContent(ans, pattern)
+        Document epss = getUriPath(http, EPSS_URL)
 
-        // Utitliza a URL encontrada para reproduzir as etapas
-        // anteriores e atingir o objetivo
-        prestadoresURL = prestadoresURL.split('gov.br')
-        Document epss = getUriPath(http, prestadoresURL[1])
-        links = epss.select('a[href]')
-
+        // Obtem a URL da pagina "Troca de Informações na Saúde Suplementar"
         pattern = ~/TISS.*/
-        def tissURL = ""
-        for (Element link : links) {
-            if (link.text() =~ pattern) {
-                tissURL = link.attr("href")
-                break
-            }
-        }
+        final String TISS_URL = getHrefContent(epss, pattern)
+        Document tiss = getUriPath(http, TISS_URL)
 
-        // Repetimos o processo para a pagina TISS
-        tissURL = tissURL.split('gov.br')
-        Document tiss = getUriPath(http, tissURL[1])
-        links = tiss.select('a[href]')
-
+        // Obtem a URL da pagina "Padrão TISS - Versão Mês/Ano"
         pattern = ~/Clique aqui para acessar a vers.o.*/
-        def mesTISS_URL = ""
-        for (Element link : links) {
-            if (link.text() =~ pattern) {
-                mesTISS_URL = link.attr("href")
-                break
-            }
-        }
+        final String MES_TISS_URL = getHrefContent(tiss, pattern)
+        Document mesTiss = getUriPath(http, MES_TISS_URL)
 
-        mesTISS_URL = mesTISS_URL.split('gov.br')
-        Document mtiss = getUriPath(http, mesTISS_URL[1])
-        links = mtiss.select('a[href]')
+        // Obtem a URL da pagina "Padrão TISS – Histórico das versões"
+        pattern = ~/Clique aqui para acessar todas as versões dos Componentes/
+        final String HISTORICO_TISS_URL = getHrefContent(tiss, pattern)
+        Document historicoTiss = getUriPath(http, HISTORICO_TISS_URL)
+
+        // Obtem a URL da pagina "Padrão TISS – Tabelas Relacionadas"
+        pattern = ~/Clique aqui para acessar as planilhas/
+        final String TABELA_TISS_URL = getHrefContent(tiss, pattern)
+        Document tabelaTiss = getUriPath(http, TABELA_TISS_URL)
+
+        Elements links = mesTiss.select('a[href]')
 
         pattern = ~/Componente de Comunica..o/
         def compC_URL = ""
@@ -89,21 +88,7 @@ class dataBot {
             Download.toFile(delegate, new File('downloads/PadroTISSComunicacao.zip'))
         }
 
-        links = tiss.select('a[href]')
-
-        pattern = ~/Clique aqui para acessar todas as versões dos Componentes/
-        def historicoTISS_URL = ""
-        for (Element link : links) {
-            if (link.text() =~ pattern) {
-                historicoTISS_URL = link.attr("href")
-                break
-            }
-        }
-
-        historicoTISS_URL = historicoTISS_URL.split('gov.br')
-        Document htiss = getUriPath(http, historicoTISS_URL[1])
-
-        Element table = htiss.select("table").get(0)
+        Element table = historicoTiss.select("table").get(0)
         Elements rows = table.select("tr")
 
         for (Element row : rows) {
@@ -111,21 +96,7 @@ class dataBot {
             println row.text()
         }
 
-        links = tiss.select('a[href]')
-
-        pattern = ~/Clique aqui para acessar as planilhas/
-        def tabelasTISS_URL = ""
-        for (Element link : links) {
-            if (link.text() =~ pattern) {
-                tabelasTISS_URL = link.attr("href")
-                break
-            }
-        }
-
-        tabelasTISS_URL = tabelasTISS_URL.split('gov.br')
-        Document tatiss = getUriPath(http, tabelasTISS_URL[1])
-
-        links = tatiss.select('a[href]')
+        links = tabelaTiss.select('a[href]')
 
         pattern = ~/Clique aqui para baixar a tabela de erros no envio para a ANS.*/
         def tableE_URL = ""
