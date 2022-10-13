@@ -9,6 +9,15 @@ import org.jsoup.select.Elements
 import static groovyx.net.http.HttpBuilder.*
 
 class dataBot {
+
+    // Obtem o html da pagina em formato de string
+    static String getUriPath(HttpBuilder http, String URL) {
+        String htmlContent = http.get(){
+            request.uri.path = URL
+        }
+        return htmlContent
+    }
+
     static void main(String[] args) {
 
         // Define a URL base
@@ -16,10 +25,8 @@ class dataBot {
             request.uri = 'https://www.gov.br'
         }
 
-        // obtem o html da pagina em formato de string
-        String ans = http.get(){
-            request.uri.path = '/ans/pt-br'
-        }
+        final String ANS_URL = '/ans/pt-br'
+        String ans = getUriPath(http, ANS_URL)
 
         // transforma a string em document
         Document doc = Jsoup.parse(ans)
@@ -39,9 +46,7 @@ class dataBot {
         // Utitliza a URL encontrada para reproduzir as etapas
         // anteriores e atingir o objetivo
         prestadoresURL = prestadoresURL.split('gov.br')
-        String epss = http.get(){
-            request.uri.path = prestadoresURL[1]
-        }
+        String epss = getUriPath(http, prestadoresURL[1])
 
         doc = Jsoup.parse(epss)
         links = doc.select('a[href]')
@@ -57,9 +62,7 @@ class dataBot {
 
         // Repetimos o processo para a pagina TISS
         tissURL = tissURL.split('gov.br')
-        String tiss = http.get(){
-            request.uri.path = tissURL[1]
-        }
+        String tiss = getUriPath(http, tissURL[1])
 
         doc = Jsoup.parse(tiss)
         links = doc.select('a[href]')
@@ -74,9 +77,7 @@ class dataBot {
         }
 
         mesTISS_URL = mesTISS_URL.split('gov.br')
-        String mtiss = http.get(){
-            request.uri.path = mesTISS_URL[1]
-        }
+        String mtiss = getUriPath(http, mesTISS_URL[1])
 
         doc = Jsoup.parse(mtiss)
         links = doc.select('a[href]')
@@ -109,10 +110,7 @@ class dataBot {
         }
 
         historicoTISS_URL = historicoTISS_URL.split('gov.br')
-
-        String htiss = http.get(){
-            request.uri.path = historicoTISS_URL[1]
-        }
+        String htiss = getUriPath(http, historicoTISS_URL[1])
 
         doc = Jsoup.parse(htiss)
         Element table = doc.select("table").get(0)
@@ -136,10 +134,7 @@ class dataBot {
         }
 
         tabelasTISS_URL = tabelasTISS_URL.split('gov.br')
-
-        String tatiss = http.get(){
-            request.uri.path = tabelasTISS_URL[1]
-        }
+        String tatiss = getUriPath(http, tabelasTISS_URL[1])
 
         doc = Jsoup.parse(tatiss)
         links = doc.select('a[href]')
