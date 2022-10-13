@@ -96,6 +96,41 @@ class dataBot {
             Download.toFile(delegate, new File('downloads/PadroTISSComunicacao.zip'))
         }
 
-        //println(compC_URL)
+        doc = Jsoup.parse(tiss)
+        links = doc.select('a[href]')
+
+        pattern = ~/Clique aqui para acessar as planilhas/
+        def tabelasTISS_URL = ""
+        for (Element link : links) {
+            if (link.text() =~ pattern) {
+                tabelasTISS_URL = link.attr("href")
+                break
+            }
+        }
+
+        tabelasTISS_URL = tabelasTISS_URL.split('gov.br')
+        println(tabelasTISS_URL)
+
+        String tatiss = http.get(){
+            request.uri.path = tabelasTISS_URL[1]
+        }
+
+        doc = Jsoup.parse(tatiss)
+        links = doc.select('a[href]')
+
+        pattern = ~/Clique aqui para baixar a tabela de erros no envio para a ANS.*/
+        def tableE_URL = ""
+        for (Element link : links) {
+            if (link.text() =~ pattern) {
+                tableE_URL = link.attr("href")
+                break
+            }
+        }
+
+        file = HttpBuilder.configure {
+            request.uri = tableE_URL
+        }.get {
+            Download.toFile(delegate, new File('downloads/tabela-erros-envio-para-ans-padrao.xlsx'))
+        }
     }
 }
